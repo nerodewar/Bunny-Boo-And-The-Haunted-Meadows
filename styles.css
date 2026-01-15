@@ -1,0 +1,119 @@
+:root{
+  --bg:#0b0d10;
+  --ui:#10141a;
+  --text:#eef2ff;
+  --muted:#aab3c5;
+  --accent:#7dd3fc;
+  --accent2:#60a5fa;
+  --danger:#fb7185;
+  --good:#34d399;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+#ui{position:fixed;inset:0;overflow:hidden;touch-action:none}
+#game{position:absolute;inset:0;display:block}
+
+#topbar{
+  position:absolute;left:12px;top:12px;display:flex;gap:8px;flex-wrap:wrap;
+  z-index:5;
+}
+.pill{
+  background:rgba(16,20,26,0.72);
+  border:1px solid rgba(125,211,252,0.18);
+  padding:8px 10px;border-radius:999px;
+  backdrop-filter: blur(10px);
+  font-size:14px;
+}
+
+#hotbar{
+  position:absolute;left:50%;bottom:12px;transform:translateX(-50%);
+  display:flex;gap:10px;z-index:6;
+}
+.slot{
+  background:rgba(16,20,26,0.78);
+  border:1px solid rgba(255,255,255,0.10);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:16px;
+  min-width:170px;
+  text-align:left;
+  font-size:14px;
+  backdrop-filter: blur(10px);
+}
+.slot .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.slot.active{border-color:rgba(125,211,252,0.55);box-shadow:0 0 0 2px rgba(125,211,252,0.10) inset}
+
+#overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:20;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+}
+#overlay.hidden{display:none}
+#overlayCard{
+  width:min(720px, calc(100% - 28px));
+  background:rgba(16,20,26,0.92);
+  border:1px solid rgba(125,211,252,0.22);
+  border-radius:22px;
+  padding:18px 18px 14px;
+  box-shadow:0 18px 70px rgba(0,0,0,0.55);
+}
+#overlayTitle{font-size:18px;font-weight:700;margin-bottom:10px}
+#overlayBody{font-size:14px;line-height:1.45;color:var(--text);white-space:pre-wrap}
+#overlayBtn{
+  margin-top:14px;
+  width:100%;
+  background:linear-gradient(90deg, rgba(125,211,252,0.95), rgba(96,165,250,0.95));
+  color:#061018;
+  border:0;border-radius:14px;
+  padding:12px 14px;
+  font-weight:700;
+  font-size:15px;
+}
+
+#interactBtn{
+  position:absolute;right:14px;bottom:92px;
+  z-index:7;
+  background:rgba(16,20,26,0.86);
+  border:1px solid rgba(255,255,255,0.14);
+  color:var(--text);
+  padding:12px 14px;
+  border-radius:16px;
+  font-weight:700;
+  backdrop-filter: blur(10px);
+}
+#interactBtn.hidden{display:none}
+
+#toast{
+  position:absolute;left:50%;top:64px;transform:translateX(-50%);
+  z-index:30;
+  background:rgba(16,20,26,0.9);
+  border:1px solid rgba(255,255,255,0.12);
+  padding:10px 12px;
+  border-radius:14px;
+  font-size:13px;color:var(--text);
+  backdrop-filter: blur(10px);
+}
+#toast.hidden{display:none}
+
+/* Joystick (left side) */
+#joy{
+  position:absolute;left:0;bottom:0;width:50%;height:55%;
+  z-index:10;
+}
+#joyBase{
+  position:absolute;left:28px;bottom:28px;
+  width:140px;height:140px;border-radius:999px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(125,211,252,0.14);
+  backdrop-filter: blur(6px);
+}
+#joyStick{
+  position:absolute;left:28px;bottom:28px;
+  width:70px;height:70px;border-radius:999px;
+  background:rgba(125,211,252,0.22);
+  border:1px solid rgba(125,211,252,0.30);
+  transform:translate(35px,35px);
+  box-shadow:0 12px 26px rgba(0,0,0,0.35);
+}
