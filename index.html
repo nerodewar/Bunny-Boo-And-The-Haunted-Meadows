@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Bunno Boo — Vertical Slice</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="ui">
+    <div id="topbar">
+      <div class="pill">HP: <span id="hp">50</span>/<span id="hpMax">50</span></div>
+      <div class="pill">ATK: <span id="atk">1</span></div>
+      <div class="pill">Rupees: <span id="rupees">0</span></div>
+      <div class="pill">Scene: <span id="sceneName">Peace Garden</span></div>
+    </div>
+
+    <canvas id="game"></canvas>
+
+    <!-- Tutorial / message overlay -->
+    <div id="overlay" class="hidden">
+      <div id="overlayCard">
+        <div id="overlayTitle"></div>
+        <div id="overlayBody"></div>
+        <button id="overlayBtn">Continue</button>
+      </div>
+    </div>
+
+    <!-- Bottom hotbar -->
+    <div id="hotbar">
+      <button id="slotAttack" class="slot active">
+        ⚡ Lightning Jolt
+        <div class="sub">Tap enemy</div>
+      </button>
+      <button id="slotInv" class="slot">
+        🎒 Inventory
+        <div class="sub">Soon</div>
+      </button>
+    </div>
+
+    <!-- Context action -->
+    <button id="interactBtn" class="hidden">Interact</button>
+
+    <!-- Joystick -->
+    <div id="joy">
+      <div id="joyBase"></div>
+      <div id="joyStick"></div>
+    </div>
+
+    <!-- Small toast -->
+    <div id="toast" class="hidden"></div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
