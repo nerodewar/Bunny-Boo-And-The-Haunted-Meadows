@@ -37,7 +37,6 @@ const TAU = Math.PI * 2;
 
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function dist2(ax, ay, bx, by) { const dx = ax - bx, dy = ay - by; return dx*dx + dy*dy; }
-function len(x, y) { return Math.hypot(x, y); }
 function norm(x, y) {
   const l = Math.hypot(x, y) || 1;
   return { x: x / l, y: y / l };
@@ -57,7 +56,6 @@ resize();
 // ---------- Game state ----------
 const game = {
   time: 0,
-  dt: 0,
   last: performance.now(),
   paused: false,
   camera: { x: 0, y: 0 },
@@ -98,8 +96,8 @@ const combat = {
 
 // Simple effects
 const fx = {
-  bolts: [],   // lightning bolts (visual)
-  pops: [],    // hit pops
+  bolts: [],
+  pops: [],
   screenShake: 0,
 };
 
@@ -111,25 +109,14 @@ function makeId() { return nextId++; }
 const world = {
   w: 1200,
   h: 800,
-  entities: [],      // enemies + chests
-  barriers: [],      // rectangles {x,y,w,h} for collision
-  exits: [],         // scene exits {x,y,w,h,to}
-  sceneScript: null, // custom per-scene logic
+  entities: [],
+  barriers: [],
+  exits: [],
+  sceneScript: null,
   name: "Peace Garden",
 };
 
 // ---------- Scene System ----------
-/*
-  Add new scenes by defining them in SCENES.
-  Each scene provides:
-    - name
-    - size
-    - spawn (player x/y)
-    - entities (factory function)
-    - barriers
-    - exits
-    - onEnter (optional)
-*/
 const SCENES = {
   PeaceGarden: {
     name: "Peace Garden",
@@ -142,9 +129,7 @@ const SCENES = {
       showOverlay(
         "Incoming Message",
         `The Evil Tom & Margaret:\n\n“We’ve got your beautiful world all a horror now, Bunny Boo! There’s nothing you can do to stop us from contaminating everything you love! Try as you may, we’ve already unleashed our evil spell upon the creatures of Boo Planet… It’s only a matter of time before we infect every last living thing!”\n\n(You feel your blue halo brighten with determination.)\n\nDestroy all evil!\nTap an enemy to attack it.\nHold to power up.\nUse the hot bar to change attack / inventory.`,
-        () => {
-          // resume play
-        }
+        () => {}
       );
       toast("Move with the left joystick. Head to the right to enter the cemetery.");
     },
@@ -155,7 +140,6 @@ const SCENES = {
     size: { w: 1400, h: 900 },
     spawn: { x: 160, y: 520 },
     barriers: () => [
-      // A few grave “blocks”
       { x: 450, y: 260, w: 90, h: 90 },
       { x: 560, y: 380, w: 90, h: 90 },
       { x: 680, y: 300, w: 90, h: 90 },
@@ -163,16 +147,12 @@ const SCENES = {
     ],
     entities: () => {
       const e = [];
-      // Big spider
       e.push(makeEnemy("spider_big", 520, 560));
-      // Medium spiders
       e.push(makeEnemy("spider_med", 740, 620));
       e.push(makeEnemy("spider_med", 900, 540));
-
-      // Chests
-      e.push(makeChest("atk", 640, 520));        // obvious white glowing chest: +1 attack
-      e.push(makeChest("gem50", 980, 340));      // green gem 50
-      e.push(makeChest("gem100", 1100, 720));    // blue gem 100
+      e.push(makeChest("atk", 640, 520));
+      e.push(makeChest("gem50", 980, 340));
+      e.push(makeChest("gem100", 1100, 720));
       return e;
     },
     exits: () => [{ x: 1290, y: 380, w: 90, h: 200, to: "Clearing" }],
@@ -186,19 +166,15 @@ const SCENES = {
     size: { w: 1600, h: 950 },
     spawn: { x: 160, y: 480 },
     barriers: () => [
-      // river band (impassable)
       { x: 950, y: 0, w: 120, h: 650 },
-      // mountains edges
       { x: 0, y: 0, w: 1600, h: 30 },
       { x: 0, y: 920, w: 1600, h: 30 },
     ],
     entities: () => {
       const e = [];
-      // 3 medium spiders
       e.push(makeEnemy("spider_med", 520, 520));
       e.push(makeEnemy("spider_med", 640, 420));
       e.push(makeEnemy("spider_med", 720, 580));
-      // crow in tree by the river
       e.push(makeEnemy("crow", 900, 260));
       return e;
     },
@@ -254,7 +230,7 @@ function makeEnemy(kind, x, y) {
     return {
       id, type: "enemy", kind,
       x, y, r: 18,
-      hp: combat.baseDamage * 2,  // 2 lightning jolts
+      hp: combat.baseDamage * 2,
       maxHp: combat.baseDamage * 2,
       speed: 95,
       dmg: 20,
@@ -268,7 +244,7 @@ function makeEnemy(kind, x, y) {
     return {
       id, type: "enemy", kind,
       x, y, r: 15,
-      hp: combat.baseDamage * 1,  // 1 lightning jolt
+      hp: combat.baseDamage * 1,
       maxHp: combat.baseDamage * 1,
       speed: 115,
       dmg: 10,
@@ -282,7 +258,7 @@ function makeEnemy(kind, x, y) {
     return {
       id, type: "enemy", kind,
       x, y, r: 14,
-      hp: combat.baseDamage * 1,  // 1 lightning jolt
+      hp: combat.baseDamage * 1,
       maxHp: combat.baseDamage * 1,
       speed: 165,
       dmg: 25,
@@ -299,25 +275,38 @@ function makeEnemy(kind, x, y) {
 
 function makeChest(kind, x, y) {
   const id = makeId();
-  return {
-    id, type: "chest", kind,
-    x, y, r: 16,
-    opened: false,
-    glow: 0,
-  };
+  return { id, type: "chest", kind, x, y, r: 16, opened: false, glow: 0 };
 }
 
-// ---------- Overlay + Toast ----------
+// ---------- Overlay + Toast (fixed for iOS) ----------
+function wireOverlayContinue(onClose) {
+  const handler = (e) => {
+    // iOS Safari: prevent default + stop propagation to avoid game listeners swallowing it
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+
+    UI.overlay.classList.add("hidden");
+    game.paused = false;
+    onClose?.();
+  };
+
+  // Clear old inline handlers
+  UI.overlayBtn.onclick = null;
+  UI.overlayBtn.onpointerup = null;
+  UI.overlayBtn.ontouchend = null;
+
+  // Add fresh handlers (once)
+  UI.overlayBtn.addEventListener("pointerup", handler, { once: true });
+  UI.overlayBtn.addEventListener("touchend", handler, { once: true, passive: false });
+  UI.overlayBtn.addEventListener("click", handler, { once: true });
+}
+
 function showOverlay(title, body, onClose) {
   game.paused = true;
   UI.overlayTitle.textContent = title;
   UI.overlayBody.textContent = body;
   UI.overlay.classList.remove("hidden");
-  UI.overlayBtn.onclick = () => {
-    UI.overlay.classList.add("hidden");
-    game.paused = false;
-    onClose?.();
-  };
+  wireOverlayContinue(onClose);
 }
 
 function toast(msg, t = 2.5) {
@@ -329,26 +318,16 @@ function toast(msg, t = 2.5) {
 // ---------- Input ----------
 function getCanvasPointFromClient(cx, cy) {
   const rect = canvas.getBoundingClientRect();
-  return {
-    x: (cx - rect.left),
-    y: (cy - rect.top),
-  };
+  return { x: (cx - rect.left), y: (cy - rect.top) };
 }
-
-function isLeftSide(clientX) {
-  return clientX < window.innerWidth * 0.5;
-}
+function isLeftSide(clientX) { return clientX < window.innerWidth * 0.5; }
 
 // Touch joystick
-function setJoyCenter(clientX, clientY) {
-  // base anchored at fixed location (bottom-left), but we treat it as fixed for simplicity.
+function setJoyCenter() {
   const baseRect = joy.base.getBoundingClientRect();
   joy.baseX = baseRect.left + baseRect.width / 2;
   joy.baseY = baseRect.top + baseRect.height / 2;
-  joy.x = joy.baseX;
-  joy.y = joy.baseY;
-  joy.dx = 0;
-  joy.dy = 0;
+  joy.dx = 0; joy.dy = 0;
   joy.stick.style.transform = `translate(35px,35px)`;
 }
 
@@ -362,14 +341,12 @@ function updateJoy(clientX, clientY) {
   joy.dx = ndx / joy.max;
   joy.dy = ndy / joy.max;
 
-  // move stick visually inside base
   const baseRect = joy.base.getBoundingClientRect();
-  const ox = (baseRect.width - joy.stick.getBoundingClientRect().width) / 2;
-  const oy = (baseRect.height - joy.stick.getBoundingClientRect().height) / 2;
-  // translate relative to base element coords
-  const tx = ox + ndx;
-  const ty = oy + ndy;
-  joy.stick.style.transform = `translate(${tx}px, ${ty}px)`;
+  const stickRect = joy.stick.getBoundingClientRect();
+  const ox = (baseRect.width - stickRect.width) / 2;
+  const oy = (baseRect.height - stickRect.height) / 2;
+
+  joy.stick.style.transform = `translate(${ox + ndx}px, ${oy + ndy}px)`;
 }
 
 function resetJoy() {
@@ -390,7 +367,7 @@ function pointerDown(e) {
     if (!joy.active && isLeftSide(clientX)) {
       joy.active = true;
       joy.id = t.identifier ?? "mouse";
-      setJoyCenter(clientX, clientY);
+      setJoyCenter();
       updateJoy(clientX, clientY);
       continue;
     }
@@ -407,7 +384,6 @@ function pointerDown(e) {
       game.pointer.x = p.x;
       game.pointer.y = p.y;
 
-      // pick a target if tapping near an enemy (in screen space)
       const target = pickEnemyAtScreen(p.x, p.y, 44);
       game.pointer.holdTargetId = target?.id ?? null;
       game.pointer.holding = false;
@@ -450,12 +426,13 @@ function pointerUp(e) {
     }
 
     if (game.pointer.active && id === game.pointer.id) {
-      // determine tap vs hold
       const now = performance.now();
       const heldMs = now - game.pointer.downAt;
 
       const targetId = game.pointer.holdTargetId;
-      const target = targetId ? world.entities.find(en => en.id === targetId && en.type === "enemy" && en.alive) : null;
+      const target = targetId
+        ? world.entities.find(en => en.id === targetId && en.type === "enemy" && en.alive)
+        : null;
 
       if (target) {
         const charge = clamp(heldMs / (combat.chargeTime * 1000), 0, 1);
@@ -470,28 +447,13 @@ function pointerUp(e) {
   }
 }
 
-// prevent scroll
-const overlayEl = document.getElementById("overlay");
-
-function shouldAllowNativeTouch(target) {
-  // Allow taps/clicks on overlay UI and hotbar/buttons
-  return (
-    overlayEl && !overlayEl.classList.contains("hidden") ||
-    target.closest("#hotbar") ||
-    target.closest("#topbar") ||
-    target.closest("#overlayCard") ||
-    target.closest("button")
-  );
-}
-
-function preventGameScroll(e) {
-  if (shouldAllowNativeTouch(e.target)) return;
-  e.preventDefault();
-}
-
-document.addEventListener("touchstart", preventGameScroll, { passive: false });
-document.addEventListener("touchmove", preventGameScroll, { passive: false });
-document.addEventListener("touchend", preventGameScroll, { passive: false });
+/* IMPORTANT:
+   Do NOT preventDefault on document-level touch events (breaks iOS button taps).
+   Instead, prevent scroll ONLY when interacting with the canvas surface.
+*/
+canvas.addEventListener("touchmove", (e) => {
+  if (!game.paused) e.preventDefault();
+}, { passive: false });
 
 window.addEventListener("mousedown", pointerDown);
 window.addEventListener("mousemove", pointerMove);
@@ -519,13 +481,10 @@ function readGamepad() {
   const gp = pads && pads[0];
   if (!gp) return { mx: 0, my: 0, cast: false, charge: false };
 
-  // left stick
   const mx = gp.axes[0] || 0;
   const my = gp.axes[1] || 0;
 
-  // A / Cross to attack
   const cast = gp.buttons[0]?.pressed || false;
-  // Hold right trigger to "charge"
   const charge = gp.buttons[7]?.pressed || false;
 
   return { mx, my, cast, charge };
@@ -536,7 +495,6 @@ let gpChargeStart = 0;
 
 // ---------- Combat ----------
 function pickEnemyAtScreen(sx, sy, radiusPx) {
-  // Convert screen point to world point
   const wx = sx + game.camera.x;
   const wy = sy + game.camera.y;
 
@@ -559,7 +517,6 @@ function castLightning(enemy, charge01) {
   if (game.paused) return;
   if (combat.cooldown > 0) return;
 
-  // check range
   const d = Math.hypot(enemy.x - player.x, enemy.y - player.y);
   if (d > combat.range) {
     toast("Too far!");
@@ -570,12 +527,7 @@ function castLightning(enemy, charge01) {
   const dmg = Math.round(combat.baseDamage * player.atk * mult);
 
   enemy.hp -= dmg;
-  fx.bolts.push({
-    t: 0,
-    dur: 0.12,
-    x1: player.x, y1: player.y,
-    x2: enemy.x, y2: enemy.y,
-  });
+  fx.bolts.push({ t: 0, dur: 0.12, x1: player.x, y1: player.y, x2: enemy.x, y2: enemy.y });
   fx.pops.push({ t: 0, dur: 0.25, x: enemy.x, y: enemy.y, text: `-${dmg}` });
   fx.screenShake = Math.min(10, fx.screenShake + 5);
 
@@ -630,20 +582,16 @@ function collideCircleRect(cx, cy, r, rect) {
 }
 
 function resolvePlayerCollision(nx, ny) {
-  // keep inside world
   nx = clamp(nx, player.r, world.w - player.r);
   ny = clamp(ny, player.r, world.h - player.r);
 
-  // resolve against barriers (simple axis separation)
   for (const b of world.barriers) {
     if (collideCircleRect(nx, ny, player.r, b)) {
-      // try separate x
       if (!collideCircleRect(player.x, ny, player.r, b)) {
         nx = player.x;
       } else if (!collideCircleRect(nx, player.y, player.r, b)) {
         ny = player.y;
       } else {
-        // push out roughly
         nx = player.x;
         ny = player.y;
       }
@@ -661,16 +609,14 @@ function updateEnemy(e, dt) {
   const d = Math.hypot(dx, dy);
 
   e.cooldown = Math.max(0, e.cooldown - dt);
-
   const canAggro = d < e.aggro;
 
   if (e.kind === "crow") {
-    // Crow: agile swoop — circles a bit then lunges toward player
     if (canAggro) {
       e.swoopTimer += dt;
       if (e.swoopTimer > 1.25) {
         e.swoopTimer = 0;
-        e.swoopPhase = 1; // lunge
+        e.swoopPhase = 1;
       }
     } else {
       e.swoopTimer = 0;
@@ -687,9 +633,7 @@ function updateEnemy(e, dt) {
         e.swoopPhase = 0;
       }
     } else if (canAggro) {
-      // drift around player
       const n = norm(dx, dy);
-      // slight sideways bias
       const sideX = -n.y * 0.4;
       const sideY = n.x * 0.4;
       e.x += (n.x + sideX) * e.speed * 0.55 * dt;
@@ -703,19 +647,16 @@ function updateEnemy(e, dt) {
     return;
   }
 
-  // Spiders: chase + bite
   if (canAggro) {
     const n = norm(dx, dy);
     e.x += n.x * e.speed * dt;
     e.y += n.y * e.speed * dt;
 
-    // Bite if close enough and off cooldown
     if (d < e.atkRange && e.cooldown === 0) {
       damagePlayer(e.dmg);
       e.cooldown = (e.kind === "spider_big") ? 0.9 : 0.75;
     }
   } else {
-    // idle wiggle
     e.x += Math.sin((game.time + e.id) * 0.7) * 10 * dt;
     e.y += Math.cos((game.time + e.id) * 0.6) * 10 * dt;
   }
@@ -727,12 +668,12 @@ function damagePlayer(amount) {
   player.invuln = 0.7;
   fx.screenShake = Math.min(14, fx.screenShake + 8);
   toast(`Ouch! -${amount} HP`, 1.2);
+
   if (player.hp <= 0) {
     showOverlay(
       "Bunny Boo fainted!",
       "The world wobbles... but you can try again.\n\n(Tip: keep distance and use charged jolts.)",
       () => {
-        // restart current scene
         player.hp = player.hpMax;
         player.invuln = 0;
         loadScene(currentSceneKey);
@@ -751,7 +692,6 @@ function checkExits() {
       player.y > ex.y && player.y < ex.y + ex.h;
 
     if (inside) {
-      // For Clearing, require all enemies dead before forest
       if (currentSceneKey === "Clearing" && ex.to === "Forest") {
         if (!allEnemiesDefeated()) {
           toast("Defeat all enemies before entering the forest.");
@@ -771,7 +711,6 @@ function allEnemiesDefeated() {
 
 // ---------- Rendering ----------
 function drawBackground() {
-  // simple per-scene palettes
   let bg = "#0b1220";
   if (currentSceneKey === "PeaceGarden") bg = "#0b1a14";
   if (currentSceneKey === "Cemetery") bg = "#121018";
@@ -781,7 +720,6 @@ function drawBackground() {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
-  // subtle grid for debugging / feel
   ctx.globalAlpha = 0.08;
   ctx.strokeStyle = "#ffffff";
   const step = 64;
@@ -818,7 +756,6 @@ function drawPlayer() {
   const sx = player.x - game.camera.x;
   const sy = player.y - game.camera.y;
 
-  // Bunno Boo: capsule body
   ctx.save();
 
   // halo at base (blue)
@@ -841,13 +778,14 @@ function drawPlayer() {
   const w = 26, h = 34;
   roundCapsule(sx - w/2, sy - h/2, w, h, 13, player.invuln > 0 ? 0.75 : 1);
 
-  // small ears hint
+  // ears hint
   ctx.globalAlpha = player.invuln > 0 ? 0.75 : 1;
   ctx.fillStyle = "#e9eefc";
   ctx.beginPath();
   ctx.roundRect(sx - 10, sy - 26, 6, 14, 6);
   ctx.roundRect(sx + 4, sy - 26, 6, 14, 6);
   ctx.fill();
+
   ctx.restore();
 }
 
@@ -856,7 +794,6 @@ function roundCapsule(x, y, w, h, r, alpha=1) {
   ctx.fillStyle = "#e9eefc";
   ctx.strokeStyle = "rgba(125,211,252,0.35)";
   ctx.lineWidth = 2;
-
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
   ctx.fill();
@@ -876,14 +813,12 @@ function drawEnemy(e) {
   const sx = e.x - game.camera.x;
   const sy = e.y - game.camera.y;
 
-  // body
   if (e.kind.startsWith("spider")) {
     ctx.fillStyle = (e.kind === "spider_big") ? "rgba(251,113,133,0.9)" : "rgba(251,113,133,0.75)";
     ctx.beginPath();
     ctx.arc(sx, sy, e.r, 0, TAU);
     ctx.fill();
 
-    // legs (simple)
     ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.lineWidth = 2;
     for (let i = -2; i <= 2; i++) {
@@ -898,7 +833,6 @@ function drawEnemy(e) {
     ctx.arc(sx, sy, e.r, 0, TAU);
     ctx.fill();
 
-    // wings
     ctx.globalAlpha = 0.35;
     ctx.strokeStyle = "rgba(255,255,255,0.55)";
     ctx.lineWidth = 3;
@@ -909,7 +843,6 @@ function drawEnemy(e) {
     ctx.globalAlpha = 1;
   }
 
-  // hp bar (tiny)
   const hp01 = clamp(e.hp / e.maxHp, 0, 1);
   ctx.globalAlpha = 0.85;
   ctx.fillStyle = "rgba(0,0,0,0.6)";
@@ -923,7 +856,6 @@ function drawChest(c) {
   const sx = c.x - game.camera.x;
   const sy = c.y - game.camera.y;
 
-  // glow
   if (!c.opened) {
     ctx.globalAlpha = 0.18 + 0.12 * Math.sin(game.time * 4);
     ctx.fillStyle = "#ffffff";
@@ -933,7 +865,6 @@ function drawChest(c) {
     ctx.globalAlpha = 1;
   }
 
-  // chest box
   ctx.fillStyle = c.opened ? "rgba(170,179,197,0.55)" : "rgba(255,255,255,0.85)";
   ctx.strokeStyle = "rgba(125,211,252,0.25)";
   ctx.lineWidth = 2;
@@ -942,13 +873,11 @@ function drawChest(c) {
   ctx.fill();
   ctx.stroke();
 
-  // latch
   ctx.fillStyle = "rgba(6,16,24,0.55)";
   ctx.fillRect(sx - 3, sy - 2, 6, 6);
 }
 
 function drawEffects(dt) {
-  // lightning bolts
   for (let i = fx.bolts.length - 1; i >= 0; i--) {
     const b = fx.bolts[i];
     b.t += dt;
@@ -959,7 +888,6 @@ function drawEffects(dt) {
     ctx.strokeStyle = "rgba(125,211,252,1)";
     ctx.lineWidth = 3;
 
-    // jagged line
     const x1 = b.x1 - game.camera.x;
     const y1 = b.y1 - game.camera.y;
     const x2 = b.x2 - game.camera.x;
@@ -981,7 +909,6 @@ function drawEffects(dt) {
     ctx.globalAlpha = 1;
   }
 
-  // damage pops
   for (let i = fx.pops.length - 1; i >= 0; i--) {
     const p = fx.pops[i];
     p.t += dt;
@@ -1000,19 +927,16 @@ function drawEffects(dt) {
 }
 
 function applyCamera(dt) {
-  // Follow player, clamp to world bounds
   const targetX = player.x - window.innerWidth / 2;
   const targetY = player.y - window.innerHeight / 2;
 
-  // smooth follow
-  const smooth = 1 - Math.pow(0.0001, dt); // frame-rate independent
+  const smooth = 1 - Math.pow(0.0001, dt);
   game.camera.x += (targetX - game.camera.x) * smooth;
   game.camera.y += (targetY - game.camera.y) * smooth;
 
   game.camera.x = clamp(game.camera.x, 0, Math.max(0, world.w - window.innerWidth));
   game.camera.y = clamp(game.camera.y, 0, Math.max(0, world.h - window.innerHeight));
 
-  // screen shake
   if (fx.screenShake > 0) {
     const s = fx.screenShake;
     fx.screenShake = Math.max(0, fx.screenShake - 40 * dt);
@@ -1025,49 +949,37 @@ function applyCamera(dt) {
 function update(dt) {
   if (game.paused) return;
 
-  // toast timer
   if (game.toastTimer > 0) {
     game.toastTimer -= dt;
     if (game.toastTimer <= 0) UI.toast.classList.add("hidden");
   }
 
-  // invuln
   player.invuln = Math.max(0, player.invuln - dt);
-
-  // cooldown
   combat.cooldown = Math.max(0, combat.cooldown - dt);
 
-  // movement input (touch joystick + gamepad)
   const gp = readGamepad();
   let mx = joy.dx;
   let my = joy.dy;
 
-  // mix with gamepad if present
   if (Math.abs(gp.mx) > 0.12 || Math.abs(gp.my) > 0.12) {
     mx = gp.mx;
     my = gp.my;
   }
 
-  // normalize diagonal
   const mlen = Math.hypot(mx, my);
   if (mlen > 1) { mx /= mlen; my /= mlen; }
 
   player.vx = mx * player.speed;
   player.vy = my * player.speed;
 
-  let nx = player.x + player.vx * dt;
-  let ny = player.y + player.vy * dt;
-
-  const res = resolvePlayerCollision(nx, ny);
+  const res = resolvePlayerCollision(player.x + player.vx * dt, player.y + player.vy * dt);
   player.x = res.nx;
   player.y = res.ny;
 
-  // enemy updates
   for (const e of world.entities) {
     if (e.type === "enemy") updateEnemy(e, dt);
   }
 
-  // controller attack: target nearest enemy, tap A to cast, hold RT to charge
   const anyEnemy = nearestEnemyInRange(combat.range);
   if (anyEnemy) {
     if (gp.cast && !gpWasCast) {
@@ -1084,15 +996,12 @@ function update(dt) {
     gpWasCast = false;
   }
 
-  // interact prompt near chest
   const chest = nearestChestInRange(44);
   if (chest) UI.interactBtn.classList.remove("hidden");
   else UI.interactBtn.classList.add("hidden");
 
-  // scene exits
   checkExits();
 
-  // UI refresh
   UI.hp.textContent = player.hp.toString();
   UI.hpMax.textContent = player.hpMax.toString();
   UI.atk.textContent = player.atk.toString();
@@ -1112,10 +1021,8 @@ function nearestEnemyInRange(r) {
 
 function render(dt) {
   applyCamera(dt);
-
   drawBackground();
 
-  // world boundaries (visual)
   ctx.globalAlpha = 0.2;
   ctx.strokeStyle = "rgba(255,255,255,0.35)";
   ctx.lineWidth = 2;
@@ -1128,7 +1035,6 @@ function render(dt) {
   drawPlayer();
   drawEffects(dt);
 
-  // small hint arrow in PeaceGarden to cemetery entrance
   if (currentSceneKey === "PeaceGarden") {
     ctx.globalAlpha = 0.8;
     ctx.fillStyle = "rgba(125,211,252,0.95)";
