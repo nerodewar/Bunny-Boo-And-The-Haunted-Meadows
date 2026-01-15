@@ -471,9 +471,27 @@ function pointerUp(e) {
 }
 
 // prevent scroll
-document.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
-document.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
-document.addEventListener("touchend", (e) => e.preventDefault(), { passive: false });
+const overlayEl = document.getElementById("overlay");
+
+function shouldAllowNativeTouch(target) {
+  // Allow taps/clicks on overlay UI and hotbar/buttons
+  return (
+    overlayEl && !overlayEl.classList.contains("hidden") ||
+    target.closest("#hotbar") ||
+    target.closest("#topbar") ||
+    target.closest("#overlayCard") ||
+    target.closest("button")
+  );
+}
+
+function preventGameScroll(e) {
+  if (shouldAllowNativeTouch(e.target)) return;
+  e.preventDefault();
+}
+
+document.addEventListener("touchstart", preventGameScroll, { passive: false });
+document.addEventListener("touchmove", preventGameScroll, { passive: false });
+document.addEventListener("touchend", preventGameScroll, { passive: false });
 
 window.addEventListener("mousedown", pointerDown);
 window.addEventListener("mousemove", pointerMove);
