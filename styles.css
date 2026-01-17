@@ -12,7 +12,7 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 
-/* IMPORTANT: Don't disable touch behavior for the whole UI or iOS won't click buttons reliably */
+/* IMPORTANT: do NOT use touch-action:none on the whole UI or iOS can stop clicking buttons */
 #ui{position:fixed;inset:0;overflow:hidden;touch-action:manipulation}
 #game{position:absolute;inset:0;display:block;touch-action:none}
 
@@ -103,7 +103,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-famil
 #joy{
   position:absolute;left:0;bottom:0;width:50%;height:55%;
   z-index:10;
-  touch-action:none; /* block scroll gestures ONLY here */
+  touch-action:none;
 }
 #joyBase{
   position:absolute;left:28px;bottom:28px;
